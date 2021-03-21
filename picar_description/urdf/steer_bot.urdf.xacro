@@ -1,0 +1,429 @@
+<?xml version="1.0"?>
+<!--
+Robot model adapted from https://github.com/CIR-KIT/steer_drive_ros/blob/kinetic-devel/steer_drive_controller/test/common/urdf/steerbot.xacro
+
+Modifications:
+Remove base_footprint link. Useful for navigation but not necessary for a simple example.
+Added materials for URDF
+Updated inertials
+
+Geometry:
+The Ackermann steering controllers require the longitudinal
+separation between the front and back wheel axes and the
+lateral separation between the left and right front steering axes.
+
+For this model:
+wheel_separation_h = base_length - 2 * axle_offset = 0.4
+wheel_separation_w = base_width  + 2 * axle_offset = 0.4
+-->
+<robot name="steer_bot" xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- Include xacro for inertials, materials and wheels -->
+  <xacro:include filename="$(find steer_bot_description)/urdf/wheel.xacro"/>
+
+  <xacro:property name="robot_namespace" value="/steer_bot"/>
+
+  <!-- Gazebo plugins -->
+  <gazebo>
+    <!-- Load ros_control plugin using the steer_bot_hardware_gazebo
+         implementation of the hardware_interface::RobotHW -->
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>${robot_namespace}</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>false</legacyModeNS>
+    </plugin>
+  </gazebo>
+
+  <!-- Math constants -->
+  <xacro:property name="deg_to_rad" value="0.01745329251994329577"/>
+
+  <!-- Robot base dimensions -->
+  <xacro:property name="base_length" value="0.5" /> 
+  <xacro:property name="base_width" value="0.3" /> 
+  <xacro:property name="base_height" value="0.1" /> 
+  <xacro:property name="base_mass" value="5" /> 
+
+  <!-- Wheel link dimensions -->
+  <xacro:property name="wheel_radius" value="0.1" />
+  <xacro:property name="wheel_thickness" value="0.08" />
+  <xacro:property name="wheel_mass" value="1" />
+
+  <!-- Steering link dimensions -->
+  <xacro:property name="steer_radius" value="0.05" />
+  <xacro:property name="steer_thickness" value="0.02" />
+  <xacro:property name="steer_mass" value="1" />
+
+  <!-- Axle positions -->
+  <xacro:property name="axle_offset" value="0.05" />
+  <xacro:property name="steer_offset" value="0.02" />
+
+  <!-- Base link -->
+  <link name="base_link"/>
+
+  <link name="chassis">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+      <material name="green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+    <xacro:solid_cuboid_inertial 
+        rpy="0 0 0" xyz="0 0 0"
+        mass="${base_mass}"
+        x="${base_length}" y="${base_width}" z="${base_height}" />
+  </link>
+
+  <joint name="joint_chassis_to_base_link" type="fixed" >
+    <parent link="base_link" />
+    <child link="chassis" />
+  </joint>
+
+  <!-- Front steer and rear wheel joints required for ackermann_steering_controller -->
+  <xacro:front_steer
+      name="front"
+      parent="base"
+      steer_radius="${steer_radius}"
+      steer_thickness="${steer_thickness}"
+      steer_mass="${steer_mass}"
+      base_length="${base_length}"
+      base_width="${base_width}"
+      axle_offset="${axle_offset}"
+      steer_height="${wheel_radius+steer_offset}">
+  </xacro:front_steer>
+
+  <xacro:rear_wheel
+      name="rear"
+      parent="base"
+      wheel_radius="${wheel_radius/4}"
+      wheel_thickness="${wheel_thickness/2}"
+      wheel_mass="${wheel_mass/32}">
+    <origin xyz="${-base_length/2+axle_offset} 0 0" rpy="${-90 * deg_to_rad} 0 0"/>
+  </xacro:rear_wheel>
+
+  <!-- Steerable front wheels -->
+  <xacro:front_wheel_lr 
+      name="front_right"
+      parent="base"
+      reflect="-1"
+      wheel_radius="${wheel_radius}"
+      wheel_thickness="${wheel_thickness}" 
+      wheel_mass="${wheel_mass}" 
+      steer_radius="${steer_radius}"
+      steer_thickness="${steer_thickness}" 
+      steer_mass="${steer_mass}" 
+      base_length="${base_length}"
+      base_width="${base_width}"
+      axle_offset="${axle_offset}"
+      steer_height="${wheel_radius+steer_offset}">
+  </xacro:front_wheel_lr>
+  <xacro:front_wheel_lr
+      name="front_left"
+      parent="base"
+      reflect="1"
+      wheel_radius="${wheel_radius}"
+      wheel_thickness="${wheel_thickness}"
+      wheel_mass="${wheel_mass}" 
+      steer_radius="${steer_radius}"
+      steer_thickness="${steer_thickness}" 
+      steer_mass="${steer_mass}" 
+      base_length="${base_length}"
+      base_width="${base_width}"
+      axle_offset="${axle_offset}"
+      steer_height="${wheel_radius+steer_offset}">
+  </xacro:front_wheel_lr>
+
+  <!-- Rear wheels -->
+  <xacro:rear_wheel_lr
+      name="rear_right"
+      parent="base"
+      wheel_radius="${wheel_radius}"
+      wheel_thickness="${wheel_thickness}"
+      wheel_mass="${wheel_mass}">
+    <origin xyz="${-base_length/2+axle_offset} ${-base_width/2-axle_offset} 0" rpy="${-90 * deg_to_rad} 0 0"/>
+  </xacro:rear_wheel_lr>
+  <xacro:rear_wheel_lr
+      name="rear_left"
+      parent="base"
+      wheel_radius="${wheel_radius}"
+      wheel_thickness="${wheel_thickness}"
+      wheel_mass="${wheel_mass}">
+    <origin xyz="${-base_length/2+axle_offset} ${+base_width/2+axle_offset} 0" rpy="${-90 * deg_to_rad} 0 0"/>
+  </xacro:rear_wheel_lr>
+
+  <!-- Colour -->
+  <gazebo reference="chassis">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+  <!-- Lidar -->
+  <xacro:property name="lidar_radius" value="0.05" />
+  <xacro:property name="lidar_height" value="0.1" />
+  <!-- Make the lidar rise above the other rings -->
+  <xacro:property name="lidar_zpos" value="${base_height*2}" />
+
+  <link name="lidar_cylinder">
+    <visual>
+      <material name="green" />
+      <geometry>
+        <cylinder length="${lidar_height}" radius="${lidar_radius}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="${lidar_height}" radius="${lidar_radius}" />
+      </geometry>
+    </collision>
+    <xacro:solid_cylinder_inertial
+        rpy="0 0 0" xyz="0 0 ${lidar_zpos}"
+        mass="${lidar_radius}"
+        radius="${lidar_radius}" length="${lidar_height}" />
+  </link>
+
+  <joint name="joint_lidar_cylinder" type="fixed">
+    <origin xyz="0 0 ${lidar_zpos}" />
+    <parent link="base_link" />
+    <child link="lidar_cylinder" />
+  </joint>
+
+  <!-- Lidar (YD X4 Lidar) -->
+  <gazebo reference="lidar_cylinder">
+    <material>Gazebo/Green</material>
+  </gazebo>
+  <gazebo reference="lidar_cylinder">
+    <sensor type="ray" name="lds_lfcd_sensor">
+      <pose>0 0 0.0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>5</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>0.5</resolution>
+            <min_angle>0.0</min_angle>
+            <max_angle>6.28319</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10</max>
+          <resolution>0.015</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for YDLIDAR X4
+               is 1.5% at half range 4m (= 60mm, "+-160mm" accuracy at max. range 8m).
+               A mean of 0.0m and stddev of 0.020m will put 99.7% of samples
+               within 0.16m of the true reading. -->
+          <mean>0.0</mean>
+          <stddev>0.02</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+        <!-- <topicName>/gopigo/scan</topicName> -->
+        <topicName>scan</topicName>
+        <frameName>lidar_cylinder</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+
+  <!-- Camera -->
+  <xacro:property name="camera_xsize" value="0.05" />
+  <xacro:property name="camera_ysize" value="0.05" />
+  <xacro:property name="camera_zsize" value="0.05" />
+  <xacro:property name="camera_mass"  value="0.1" />
+  <xacro:property name="camera_xpos"  value="${base_length/2}" />
+  <xacro:property name="camera_ypos"  value="0.00" />
+  <xacro:property name="camera_zpos"  value="${base_height/2}" />
+
+  <!-- Camera -->
+  <link name="camera_box" >
+    <visual>
+      <material name="blue" />
+      <geometry>
+        <box size="${camera_xsize} ${camera_ysize} ${camera_zsize}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${camera_xsize} ${camera_ysize} ${camera_zsize}" />
+      </geometry>
+    </collision>
+    <xacro:solid_cuboid_inertial
+        rpy="0 0 0" xyz="${camera_xsize} ${camera_ysize} ${camera_zsize}"
+        mass="${camera_mass}"
+        x="${camera_xpos}" y="${camera_ypos}" z="${camera_zpos}" />
+  </link>
+
+  <joint name="joint_camera_box" type="fixed">
+    <origin xyz="${camera_xpos} ${camera_ypos} ${camera_zpos}" rpy="0 0 0" />
+    <parent link="chassis" />
+    <child link="camera_box" />
+  </joint>
+
+
+  <gazebo reference="camera_box">
+    <sensor type="camera" name="camera1">
+      <update_rate>30.0</update_rate>
+      <camera name="front">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>/camera1</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU -->
+
+
+  <!-- Imu -->
+  <xacro:property name="imu_xsize" value="0.05" />
+  <xacro:property name="imu_ysize" value="0.05" />
+  <xacro:property name="imu_zsize" value="0.05" />
+  <xacro:property name="imu_mass"  value="0.1" />
+  <xacro:property name="imu_xpos"  value="0" />
+  <xacro:property name="imu_ypos"  value="0.00" />
+  <xacro:property name="imu_zpos"  value="${base_height/2}" />
+
+  <!-- Imu -->
+  <link name="imu_box" >
+    <visual>
+      <material name="blue" />
+      <geometry>
+        <box size="${imu_xsize} ${imu_ysize} ${imu_zsize}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${imu_xsize} ${imu_ysize} ${imu_zsize}" />
+      </geometry>
+    </collision>
+    <xacro:solid_cuboid_inertial
+        rpy="0 0 0" xyz="${imu_xsize} ${imu_ysize} ${imu_zsize}"
+        mass="${imu_mass}"
+        x="${imu_xpos}" y="${imu_ypos}" z="${imu_zpos}" />
+  </link>
+
+  <joint name="joint_imu_box" type="fixed">
+    <origin xyz="${imu_xpos} ${imu_ypos} ${imu_zpos}" rpy="0 0 0" />
+    <parent link="chassis" />
+    <child link="imu_box" />
+  </joint>
+
+  <gazebo reference="imu_box">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>__default_topic__</topic>
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin" >
+        <topicName>imu</topicName>
+        <bodyName>imu_link</bodyName>
+        <updateRateHZ>10.0</updateRateHZ>
+        <gaussianNoise>2.89e-08</gaussianNoise>
+        <xyzOffset>0 0 0</xyzOffset>
+        <rpyOffset>0 0 0</rpyOffset>
+        <frameName>imu_link</frameName>
+        <inertialOrientationAsReference>false</inertialOrientationAsReference>
+      </plugin>
+      <pose>0 0 0 0 0 0</pose>
+    </sensor>
+  </gazebo>
+
+
+
+  <!-- GPS Sensor -->
+
+<!--...................................GPS MODULE...................................................-->
+<link name="base_gps_front">
+
+        <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+
+    <collision name='collision'>
+
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+   	<material name="green"/>
+    </collision>
+
+    <visual>
+
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<material name="green"/>
+
+    </visual>
+</link>
+
+<gazebo reference="base_gps_front">
+    <material>Gazebo/Green</material>
+    <turnGravityOff>false</turnGravityOff>
+</gazebo>
+
+<joint name="gps_front_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 0" xyz="-0.395 -0.295 0.155" />
+    <parent link="base_link"/>
+    <child link="base_gps_front"/>
+</joint>
+
+<!--..................................GPS SENSOR PLUGIN.......................................-->
+
+    <!-- GPS Sensor -->
+  <gazebo>
+    <plugin name="novatel_gps_sim" filename="libhector_gazebo_ros_gps.so">
+      <alwaysOn>1</alwaysOn>
+      <updateRate>50</updateRate>
+      <bodyName>base_gps_front</bodyName>
+      <topicName>fix</topicName>
+      <velocityTopicName>/vel</velocityTopicName>
+      <drift>5.0 5.0 5.0</drift>
+      <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+      <velocityDrift>0 0 0</velocityDrift>
+      <velocityGaussianNoise>0.1 0.1 0.1</velocityGaussianNoise>
+     <!--<referenceLatitude>38.419354</referenceLatitude>-->
+     <!--<referenceLongitude>-110.781900</referenceLongitude-->  <!--for blacklister-->
+     <!--<referenceLatitude>38.419853</referenceLatitude>
+     <referenceLongitude>-110.781529</referenceLongitude>   for blacklister 1,2-->
+     <!-- <referenceLatitude>13.347590</referenceLatitude> -->
+     <!-- <referenceLongitude>74.79208833</referenceLongitude>   <!-\-for workshop-\-> -->
+    </plugin>
+  </gazebo>
+</robot>
