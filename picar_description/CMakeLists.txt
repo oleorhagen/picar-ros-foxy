@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(picardescription)
+project(picar_description)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -15,11 +15,15 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+install(
+  DIRECTORY urdf
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(xacro REQUIRED)
+find_package(urdf REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

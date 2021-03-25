@@ -18,9 +18,9 @@ wheel_separation_w = base_width  + 2 * axle_offset = 0.4
 -->
 <robot name="steer_bot" xmlns:xacro="http://wiki.ros.org/xacro">
   <!-- Include xacro for inertials, materials and wheels -->
-  <xacro:include filename="$(find steer_bot_description)/urdf/wheel.xacro"/>
+  <xacro:include filename="$(find picar_description)/urdf/wheel.xacro"/>
 
-  <xacro:property name="robot_namespace" value="/steer_bot"/>
+  <xacro:property name="robot_namespace" value="/picar_bot"/>
 
   <!-- Gazebo plugins -->
   <gazebo>

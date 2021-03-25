@@ -18,7 +18,7 @@
 -->
 <robot name="bicycle_bot" xmlns:xacro="http://wiki.ros.org/xacro">
   <!-- Include xacro for inertials, materials and wheels -->
-  <xacro:include filename="$(find steer_bot_description)/urdf/wheel.xacro"/>
+  <xacro:include filename="$(find picar_description)/urdf/wheel.xacro"/>
 
   <xacro:property name="robot_namespace" value="/bicycle_bot"/>
 
