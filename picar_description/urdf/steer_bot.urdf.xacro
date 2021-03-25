@@ -2,17 +2,17 @@
 <!--
 Robot model adapted from https://github.com/CIR-KIT/steer_drive_ros/blob/kinetic-devel/steer_drive_controller/test/common/urdf/steerbot.xacro
 
-Modifications:
+Modifications
 Remove base_footprint link. Useful for navigation but not necessary for a simple example.
 Added materials for URDF
 Updated inertials
 
-Geometry:
+Geometry
 The Ackermann steering controllers require the longitudinal
 separation between the front and back wheel axes and the
 lateral separation between the left and right front steering axes.
 
-For this model:
+For this model
 wheel_separation_h = base_length - 2 * axle_offset = 0.4
 wheel_separation_w = base_width  + 2 * axle_offset = 0.4
 -->
