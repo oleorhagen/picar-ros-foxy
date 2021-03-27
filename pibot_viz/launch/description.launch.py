@@ -7,9 +7,6 @@ from launch_ros.actions import Node
 import launch_ros
 import os
 
-# TODO - This file is not useful atm, as I am publishing this in the viz package also..
-# What to do here? Hmmm
-
 
 def generate_launch_description():
 
@@ -18,12 +15,34 @@ def generate_launch_description():
     ).find("picar_description")
     default_model_path = os.path.join(pkg_share, "urdf/steer_bot.urdf.xacro")
 
+    viz_share = launch_ros.substitutions.FindPackageShare(package="pibot_viz").find(
+        "pibot_viz"
+    )
+    default_rviz_config = os.path.join(viz_share, "rviz/visualize_pibot_simple.rviz")
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
                 "model",
                 default_value=default_model_path,
                 description="The urdf model file name (xacro supported)",
+            ),
+            Node(
+                package="joint_state_publisher",
+                executable="joint_state_publisher",
+                name="joint_state_publisher",
+                parameters=[
+                    {
+                        "robot_description": Command(
+                            [
+                                "xacro ",
+                                LaunchConfiguration(
+                                    "model",
+                                ),
+                            ]
+                        ),
+                    }
+                ],
             ),
             Node(
                 package="robot_state_publisher",
@@ -42,6 +61,14 @@ def generate_launch_description():
                         ),
                     }
                 ],
+            ),
+            # Rviz2
+            Node(
+                package="rviz2",
+                executable="rviz2",
+                name="rviz2",
+                output="screen",
+                arguments=["--display-config", default_rviz_config],
             ),
         ]
     )
