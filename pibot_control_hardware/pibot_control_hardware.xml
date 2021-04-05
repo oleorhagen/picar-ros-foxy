@@ -1,0 +1,15 @@
+<library path="pibot_control_hardware">
+  <class name="pibot_control_hardware/DiffBotSystemHardware"
+         type="pibot_control_hardware::DiffBotSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Handle the hardware interface for the Ackermann steering controller used
+      on the PiCar Pro, using a system hardware interface-type.
+
+      This uses a velocity interface for the rear wheel motors, and a position
+      interface for the fron wheel steering.
+
+      This then has the mobil Ackermann base controlled through ROS2 control.
+    </description>
+  </class>
+</library>
