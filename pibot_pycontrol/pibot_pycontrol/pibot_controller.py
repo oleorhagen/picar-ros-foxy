@@ -31,6 +31,10 @@ class PiBotController(Node):
 
     def cmd_vel_callback(self, msg):
         self.get_logger().info(f"Got cmd_vel msg: {msg}")
+        # Simply extract the angular.z = theta
+        self.theta = msg.angular.z
+        # Simply extract the linear.x = speed
+        self.speed = msg.linear.x
 
 
 def main(args=None):
