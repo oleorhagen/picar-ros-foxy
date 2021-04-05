@@ -1,0 +1,9 @@
+<library path="ackermann_steering_controller">
+  <class name="ackermann_steering_controller/AckermannSteeringController" type="ackermann_steering_controller::AckermannSteeringController" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    The Ackermann steering controller transforms linear and angular velocity
+    messages into signals for the rear motors, and the front steer of an
+    Ackermann controlled mobile base.
+  </description>
+  </class>
+</library>
