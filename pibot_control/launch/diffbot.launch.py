@@ -33,10 +33,10 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(robot_description_path)
     robot_description = {"robot_description": robot_description_config.toxml()}
 
-    ackermann_steering_controller = os.path.join(
+    diffbot_steering_controller = os.path.join(
         get_package_share_directory("pibot_control"),
         "controller",
-        "ackermann_steering_controller.yml",
+        "diffbot_drive_controller.yml",
     )
 
     return LaunchDescription(
@@ -57,7 +57,7 @@ def generate_launch_description():
             Node(
                 package="controller_manager",
                 executable="ros2_control_node",
-                parameters=[robot_description, ackermann_steering_controller],
+                parameters=[robot_description, diffbot_steering_controller],
                 output={
                     "stdout": "screen",
                     "stderr": "screen",

@@ -214,6 +214,51 @@
       <axis xyz="0 0 1"/>
     </joint>
 
+    <!-- ROS2 control velocity controller -->
+    <!-- Ackermann controller not loading atm -->
+    <!-- <ros2_control name="${name}_wheel_joint_transmission" type="actuator" > -->
+
+    <!--   <hardware> -->
+    <!--     <plugin>ackermann_steering_controller/AckermannSteeringController</plugin> -->
+    <!--     <param name="example_param_hw_start_duration_sec">2.0</param> -->
+    <!--     <param name="example_param_hw_stop_duration_sec">3.0</param> -->
+    <!--   </hardware> -->
+
+    <!--   <joint name="${name}_wheel_joint"> -->
+    <!--     <command_interface name="velocity"> -->
+    <!--       <param name="min">-1</param> -->
+    <!--       <param name="max">1</param> -->
+    <!--     </command_interface> -->
+    <!--     <state_interface name="velocity"/> -->
+    <!--   </joint> -->
+
+    <!-- </ros2_control> -->
+
+
+    <ros2_control name="test_diffbot_plugin" type="system">
+      <hardware>
+        <plugin>pibot_control_hardware/PiBotSystemHardware</plugin>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+      </hardware>
+      <joint name="left_wheel_joint">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="right_wheel_joint">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+
     <transmission name="${name}_wheel_joint_trans">
       <type>transmission_interface/SimpleTransmission</type>
       <actuator name="${name}_wheel_joint_motor">

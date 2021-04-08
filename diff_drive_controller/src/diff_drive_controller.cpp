@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /*
- * Author: Ole P. Orhagen
+ * Author: Bence Magyar, Enrique Fernández, Manuel Meraz
  */
 
 #include <memory>
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "ackermann_steering_controller/ackermann_steering_controller.hpp"
+#include "diff_drive_controller/diff_drive_controller.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -37,7 +37,7 @@ constexpr auto DEFAULT_ODOMETRY_TOPIC = "/odom";
 constexpr auto DEFAULT_TRANSFORM_TOPIC = "/tf";
 }  // namespace
 
-namespace ackermann_steering_controller
+namespace diff_drive_controller
 {
 using namespace std::chrono_literals;
 using lifecycle_msgs::msg::State;
@@ -46,11 +46,11 @@ using controller_interface::interface_configuration_type;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
 
-AckermannSteeringController::AckermannSteeringController()
+DiffDriveController::DiffDriveController()
 : controller_interface::ControllerInterface() {}
 
 controller_interface::return_type
-AckermannSteeringController::init(const std::string & controller_name)
+DiffDriveController::init(const std::string & controller_name)
 {
   // initialize lifecycle node
   auto ret = ControllerInterface::init(controller_name);
@@ -61,10 +61,11 @@ AckermannSteeringController::init(const std::string & controller_name)
   try {
     auto node = get_node();
     // with the lifecycle node being initialized, we can declare parameters
-    node->declare_parameter<std::vector<std::string>>("rear_wheel_joints", {});
-    node->declare_parameter<std::vector<std::string>>("front_steer_joints", {});
+    node->declare_parameter<std::vector<std::string>>("left_wheel_names", {});
+    node->declare_parameter<std::vector<std::string>>("right_wheel_names", {});
 
     node->declare_parameter<double>("wheel_separation", wheel_params_.separation);
+    node->declare_parameter<int>("wheels_per_side", wheel_params_.wheels_per_side);
     node->declare_parameter<double>("wheel_radius", wheel_params_.radius);
     node->declare_parameter<double>(
       "wheel_separation_multiplier",
@@ -115,7 +116,7 @@ AckermannSteeringController::init(const std::string & controller_name)
   return controller_interface::return_type::SUCCESS;
 }
 
-InterfaceConfiguration AckermannSteeringController::command_interface_configuration() const
+InterfaceConfiguration DiffDriveController::command_interface_configuration() const
 {
   std::vector<std::string> conf_names;
   for (const auto & joint_name : left_wheel_names_) {
@@ -127,7 +128,7 @@ InterfaceConfiguration AckermannSteeringController::command_interface_configurat
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
-InterfaceConfiguration AckermannSteeringController::state_interface_configuration() const
+InterfaceConfiguration DiffDriveController::state_interface_configuration() const
 {
   std::vector<std::string> conf_names;
   for (const auto & joint_name : left_wheel_names_) {
@@ -140,7 +141,7 @@ InterfaceConfiguration AckermannSteeringController::state_interface_configuratio
 }
 
 
-controller_interface::return_type AckermannSteeringController::update()
+controller_interface::return_type DiffDriveController::update()
 {
   auto logger = node_->get_logger();
   if (get_current_state().id() == State::PRIMARY_STATE_INACTIVE) {
@@ -273,7 +274,7 @@ controller_interface::return_type AckermannSteeringController::update()
   return controller_interface::return_type::SUCCESS;
 }
 
-CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_configure(const rclcpp_lifecycle::State &)
 {
   auto logger = node_->get_logger();
 
@@ -480,7 +481,7 @@ CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle:
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_activate(const rclcpp_lifecycle::State &)
 {
   const auto left_result =
     configure_side("left", left_wheel_names_, registered_left_wheel_handles_);
@@ -505,13 +506,13 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn AckermannSteeringController::on_deactivate(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_deactivate(const rclcpp_lifecycle::State &)
 {
   subscriber_is_active_ = false;
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn AckermannSteeringController::on_cleanup(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_cleanup(const rclcpp_lifecycle::State &)
 {
   if (!reset()) {
     return CallbackReturn::ERROR;
@@ -521,7 +522,7 @@ CallbackReturn AckermannSteeringController::on_cleanup(const rclcpp_lifecycle::S
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn AckermannSteeringController::on_error(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_error(const rclcpp_lifecycle::State &)
 {
   if (!reset()) {
     return CallbackReturn::ERROR;
@@ -529,7 +530,7 @@ CallbackReturn AckermannSteeringController::on_error(const rclcpp_lifecycle::Sta
   return CallbackReturn::SUCCESS;
 }
 
-bool AckermannSteeringController::reset()
+bool DiffDriveController::reset()
 {
   odometry_.resetOdometry();
 
@@ -549,12 +550,12 @@ bool AckermannSteeringController::reset()
   return true;
 }
 
-CallbackReturn AckermannSteeringController::on_shutdown(const rclcpp_lifecycle::State &)
+CallbackReturn DiffDriveController::on_shutdown(const rclcpp_lifecycle::State &)
 {
   return CallbackReturn::SUCCESS;
 }
 
-void AckermannSteeringController::halt()
+void DiffDriveController::halt()
 {
   const auto halt_wheels = [](auto & wheel_handles) {
       for (const auto & wheel_handle : wheel_handles) {
@@ -566,7 +567,7 @@ void AckermannSteeringController::halt()
   halt_wheels(registered_right_wheel_handles_);
 }
 
-CallbackReturn AckermannSteeringController::configure_side(
+CallbackReturn DiffDriveController::configure_side(
   const std::string & side,
   const std::vector<std::string> & wheel_names,
   std::vector<WheelHandle> & registered_handles)
@@ -618,11 +619,5 @@ CallbackReturn AckermannSteeringController::configure_side(
 #include "class_loader/register_macro.hpp"
 
 CLASS_LOADER_REGISTER_CLASS(
-  ackermann_steering_controller::AckermannSteeringController,
+  diff_drive_controller::DiffDriveController,
   controller_interface::ControllerInterface)
-
-#include "pluginlib/class_list_macros.hpp"
-
-PLUGINLIB_EXPORT_CLASS(
-    ackermann_steering_controller::AckermannSteeringController,
-    controller_interface::ControllerInterface)

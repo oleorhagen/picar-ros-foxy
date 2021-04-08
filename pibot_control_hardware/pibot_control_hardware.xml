@@ -1,6 +1,6 @@
 <library path="pibot_control_hardware">
-  <class name="pibot_control_hardware/DiffBotSystemHardware"
-         type="pibot_control_hardware::DiffBotSystemHardware"
+  <class name="pibot_control_hardware/PiBotSystemHardware"
+         type="pibot_control_hardware::PiBotSystemHardware"
          base_class_type="hardware_interface::SystemInterface">
     <description>
       Handle the hardware interface for the Ackermann steering controller used

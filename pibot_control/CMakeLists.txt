@@ -17,12 +17,12 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(pluginlib rclcpp hardware_interface pibot_control_hardware ackermann_steering_controller REQUIRED)
+find_package(pluginlib REQUIRED)
 
 
 ## INSTALL
 install(
-  DIRECTORY controllers launch/
+  DIRECTORY controller launch/
   DESTINATION share/${PROJECT_NAME}
   )
 
