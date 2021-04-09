@@ -620,9 +620,3 @@ CallbackReturn AckermannSteeringController::configure_side(
 CLASS_LOADER_REGISTER_CLASS(
   ackermann_steering_controller::AckermannSteeringController,
   controller_interface::ControllerInterface)
-
-#include "pluginlib/class_list_macros.hpp"
-
-PLUGINLIB_EXPORT_CLASS(
-    ackermann_steering_controller::AckermannSteeringController,
-    controller_interface::ControllerInterface)
