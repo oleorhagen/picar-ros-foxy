@@ -1,3 +1,7 @@
+* TODO - Read 
+
+  https://jeffzzq.medium.com/designing-a-ros2-robot-7c31a62c535a
+
 * DONE Get an X-window running with ROS2
   CLOSED: [2021-03-20 Sat 17:27]
 
@@ -42,7 +46,7 @@
   /cmd_vel_out
   /odom
 
-* TODO - Write an Ackermann controller for ROS2 control
+* INPROGRESS - Write an Ackermann controller for ROS2 control
 
   Start
   [here](https://ros-controls.github.io/control.ros.org/getting_started.html),
