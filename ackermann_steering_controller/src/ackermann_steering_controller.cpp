@@ -61,8 +61,8 @@ AckermannSteeringController::init(const std::string & controller_name)
   try {
     auto node = get_node();
     // with the lifecycle node being initialized, we can declare parameters
-    node->declare_parameter<std::vector<std::string>>("rear_wheel_joints", {});
-    node->declare_parameter<std::vector<std::string>>("front_steer_joints", {});
+    node->declare_parameter<std::vector<std::string>>("left_wheel_names", {});
+    node->declare_parameter<std::vector<std::string>>("right_wheel_names", {});
 
     node->declare_parameter<double>("wheel_separation", wheel_params_.separation);
     node->declare_parameter<double>("wheel_radius", wheel_params_.radius);
