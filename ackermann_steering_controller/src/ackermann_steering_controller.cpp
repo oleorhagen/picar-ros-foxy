@@ -47,7 +47,8 @@ using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
 
 AckermannSteeringController::AckermannSteeringController()
-: controller_interface::ControllerInterface() {}
+  : controller_interface::ControllerInterface(),
+    rt_command_ptr_(nullptr){}
 
 controller_interface::return_type
 AckermannSteeringController::init(const std::string & controller_name)
@@ -124,9 +125,12 @@ InterfaceConfiguration AckermannSteeringController::state_interface_configuratio
 controller_interface::return_type AckermannSteeringController::update()
 {
   auto logger = node_->get_logger();
-  auto steering_commands = rt_command_ptr_.readFromRT();
+  auto steering_commands = rt_command_ptr_.readFromNonRT();
+  // Set dummy speed of 1.0 to test
+  front_left_wheel->command_velocity.get().set_value(1.0);
   // No command received yet
   if (!steering_commands || !(*steering_commands)) {
+    RCLCPP_INFO_STREAM(logger, "\n--------------------------------------------------------------------------------No steering command received....\n--------------------------------------------------------------------------------\n");
     return controller_interface::return_type::OK;
   }
 
@@ -137,6 +141,9 @@ controller_interface::return_type AckermannSteeringController::update()
   //
   // Set the wheel velocities
   //
+
+  RCLCPP_INFO(node_->get_logger(), "Setting velocity to: %f\n", (*steering_commands)->twist.linear.x);
+  front_left_wheel->command_velocity.get().set_value((*steering_commands)->twist.linear.x);
 
   // TODO - How to set the individual interface values (?)
   // front_left_wheel.command_velocity.set_value(0.0);
@@ -164,11 +171,13 @@ CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle:
     node_->get_parameter("right_front_steer_joint").as_string();
 
   // Create a subscription to /cmd_vel
-  node_->create_subscription<geometry_msgs::msg::Twist>(
-                                                        DEFAULT_COMMAND_TOPIC, rclcpp::SystemDefaultsQoS(),
-                                                        [this](const Twist::SharedPtr msg) {
-                                                          rt_command_ptr_.writeFromNonRT(msg);
-                                                        });
+  velocity_command_subscriber_ = node_->create_subscription<geometry_msgs::msg::Twist>(
+         "cmd_vel", rclcpp::SystemDefaultsQoS(),
+         [this](const Twist::SharedPtr msg) -> void {
+           RCLCPP_INFO(node_->get_logger(), "Received Twist message: %f", msg->twist.linear.x);
+           rt_command_ptr_.writeFromNonRT(msg);
+           RCLCPP_INFO(node_->get_logger(), "Wrote message to the");
+         });
 
   RCLCPP_INFO_STREAM(logger, "configure successful");
   return CallbackReturn::SUCCESS;
@@ -196,7 +205,7 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
               RCLCPP_DEBUG(logger, "Found interface: %s", state_interface.get_name());
 
               // Command interface
-              for (const auto &command_interface : command_interfaces_)
+              for (auto &command_interface : command_interfaces_)
                 {
 
                   RCLCPP_INFO(logger, "Found interface: %s", command_interface.get_interface_name());
@@ -223,6 +232,7 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
 
   CallbackReturn AckermannSteeringController::on_deactivate(const rclcpp_lifecycle::State &)
   {
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Deactivating...");
     subscriber_is_active_ = false;
     return CallbackReturn::SUCCESS;
   }
@@ -238,6 +248,7 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
 
   CallbackReturn AckermannSteeringController::on_error(const rclcpp_lifecycle::State &)
   {
+    RCLCPP_INFO_STREAM(node_->get_logger(), "On_error");
     if (!reset()) {
       return CallbackReturn::ERROR;
     }
@@ -246,17 +257,21 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
 
   bool AckermannSteeringController::reset()
   {
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Resetting...");
+    velocity_command_subscriber_.reset();
     return true;
   }
 
   CallbackReturn AckermannSteeringController::on_shutdown(const rclcpp_lifecycle::State &)
   {
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Shutting down...");
     return CallbackReturn::SUCCESS;
   }
 
   void AckermannSteeringController::halt()
   {
     // TODO
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Halting...");
   }
 
 // CallbackReturn AckermannSteeringController::get_wheel_handle_from_name(const std::string & wheel_joint_name, std::shared_ptr<WheelHandle> & handle) {
