@@ -42,6 +42,8 @@
 #include "realtime_tools/realtime_publisher.h"
 #include "tf2_msgs/msg/tf_message.hpp"
 
+// #include "ackermann_steering_controller/ackermann_controller_wheel.hpp"
+
 
 namespace ackermann_steering_controller
 {
@@ -89,39 +91,43 @@ public:
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
 
 protected:
+
   struct WheelHandle
   {
     std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_velocity;
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> command_velocity;
+    std::reference_wrapper<const hardware_interface::LoanedCommandInterface> command_velocity;
   };
 
-  bool subscriber_is_active_ = false;
-  rclcpp::Subscription<Twist>::SharedPtr velocity_command_subscriber_ = nullptr;
 
-  realtime_tools::RealtimeBuffer<std::shared_ptr<geometry_msgs:msgs::Twist>> rt_command_ptr_;
+      bool subscriber_is_active_                                          = false;
+      rclcpp::Subscription<Twist>::SharedPtr velocity_command_subscriber_ = nullptr;
 
-  // Motor joint names
-  std::string left_front_wheel_joint;
-  std::string right_front_wheel_joint;
-  std::string left_rear_wheel_joint;
-  std::string right_rear_wheel_joint;
+      realtime_tools::RealtimeBuffer<std::shared_ptr<Twist>> rt_command_ptr_;
 
-  // Steer joint names
-  std::string left_front_steer_joint;
-  std::string right_front_steer_joint;
+      // Motor joint names
+      std::string front_left_wheel_joint;
+      std::string front_right_wheel_joint;
+      std::string rear_left_wheel_joint;
+      std::string rear_right_wheel_joint;
 
-  // Command interfaces for the motor controlled wheels
-  std::shared_ptr<WheelHandle> front_left_wheel;
-  std::shared_prt<WheelHandle> front_right_wheel;
-  std::shared_ptr<WheelHandle> rear_left_wheel;
-  std::shared_ptr<WheelHandle> rear_right_wheel;
+      // Steer joint names
+      std::string front_left_steer_joint;
+      std::string front_right_steer_joint;
 
-  // Command interfaces for the front wheel steers
-  std::shared_ptr<WheelHandle> front_left_steer_wheel;
-  std::shared_ptr<WheelHandle> front_right_steer_wheel;
+      // Command interfaces for the motor controlled wheels
+      std::shared_ptr<WheelHandle> front_left_wheel;
+      std::shared_ptr<WheelHandle> front_right_wheel;
+      std::shared_ptr<WheelHandle> rear_left_wheel;
+      std::shared_ptr<WheelHandle> rear_right_wheel;
 
-  bool reset();
-  void halt();
-};
+      // Command interfaces for the front wheel steers
+      std::shared_ptr<WheelHandle> front_left_steer_wheel;
+      std::shared_ptr<WheelHandle> front_right_steer_wheel;
+
+      bool reset();
+      void halt();
+
+  CallbackReturn get_wheel_handle_from_name(const std::string &wheel_joint_name, WheelHandle & handle);
+  };
 }  // namespace diff_drive_controller
 #endif  // DIFF_DRIVE_CONTROLLER__DIFF_DRIVE_CONTROLLER_HPP_

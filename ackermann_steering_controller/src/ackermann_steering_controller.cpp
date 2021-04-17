@@ -54,7 +54,7 @@ AckermannSteeringController::init(const std::string & controller_name)
 {
   // initialize lifecycle node
   auto ret = ControllerInterface::init(controller_name);
-  if (ret != controller_interface::return_type::SUCCESS) {
+  if (ret != controller_interface::return_type::OK) {
     return ret;
   }
 
@@ -62,16 +62,21 @@ AckermannSteeringController::init(const std::string & controller_name)
     auto node = get_node();
 
     // Velocity control joints for the motors
-    node->declare_parameter<std::string>("left_front_wheel_joint");
-    node->declare_parameter<std::string>("right_front_wheel_joint");
-    node->declare_parameter<std::string>("left_rear_wheel_joint");
-    node->declare_parameter<std::string>("right_rear_wheel_joint");
+    node->declare_parameter<std::string>("left_front_wheel_joint", "left_wheel_joint");
+    node->declare_parameter<std::string>("right_front_wheel_joint", "");
+    node->declare_parameter<std::string>("left_rear_wheel_joint", "");
+    node->declare_parameter<std::string>("right_rear_wheel_joint", "");
 
     // Front steer joints
-    node->declare_parameter<std::string>("left_front_steer_joint");
-    node->declare_parameter<std::string>("right_front_steer_joint");
+    node->declare_parameter<std::string>("left_front_steer_joint", "");
+    node->declare_parameter<std::string>("right_front_steer_joint", "");
+  }
+  catch(const std::exception &e) {
+    fprintf(stderr, "Exception thrown during initialization of the Ackermann steering controller. Message: %s\n", e.what());
+    return controller_interface::return_type::ERROR;
+  }
 
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 InterfaceConfiguration AckermannSteeringController::command_interface_configuration() const
@@ -83,34 +88,36 @@ InterfaceConfiguration AckermannSteeringController::command_interface_configurat
     controller_interface::interface_configuration_type::INDIVIDUAL;
 
   // Motor command interfaces setup
-  command_interfaces_config.names.push_back("left_front_wheel_joint" + "/" + hardware_interface::HW_IF_VELOCITY);
-  command_interfaces_config.names.push_back("right_front_wheel_joint" + "/" + hardware_interface::HW_IF_VELOCITY);
-  command_interfaces_config.names.push_back("left_rear_wheel_joint" + "/" +
-                                            hardware_interface::HW_IF_VELOCITY);
-  command_interfaces_config.names.push_back("right_rear_wheel_joint" + "/" +
-                                            hardware_interface::HW_IF_VELOCITY);
+  command_interfaces_config.names.push_back(front_left_wheel_joint + "/" + hardware_interface::HW_IF_VELOCITY);
+  // command_interfaces_config.names.push_back(front_right_wheel_joint + "/" + hardware_interface::HW_IF_VELOCITY);
+  // command_interfaces_config.names.push_back(rear_left_wheel_joint + "/" +
+  //                                           hardware_interface::HW_IF_VELOCITY);
+  // command_interfaces_config.names.push_back(rear_right_wheel_joint + "/" +
+  //                                           hardware_interface::HW_IF_VELOCITY);
 
-  // Steer command interfaces setup
-  command_interfaces_config.names.push_back("left_front_steer_joint" + "/" +
-                                            hardware_interface::HW_IF_POSITION);
-  command_interfaces_config.names.push_back("right_front_steer_joint" + "/" +
-                                            hardware_interface::HW_IF_POSITION);
+  // // Steer command interfaces setup
+  // command_interfaces_config.names.push_back(front_left_steer_joint + "/" +
+  //                                           hardware_interface::HW_IF_POSITION);
+  // command_interfaces_config.names.push_back(front_right_steer_joint + "/" +
+  //                                           hardware_interface::HW_IF_POSITION);
 
   return command_interfaces_config;
 }
 
 InterfaceConfiguration AckermannSteeringController::state_interface_configuration() const
 {
-  std::vector<std::string> conf_names;
+  controller_interface::InterfaceConfiguration state_interfaces_config;
+  state_interfaces_config.type =
+    controller_interface::interface_configuration_type::INDIVIDUAL;
   // Motor states
-  conf_names.push_back("left_front_wheel_joint" + "/" + HW_IF_VELOCITY);
-  conf_names.push_back("right_front_wheel_joint" + "/" + HW_IF_VELOCITY);
-  conf_names.push_back("left_rear_wheel_joint" + "/" + HW_IF_VELOCITY);
-  conf_names.push_back("right_rear_wheel_joint" + "/" + HW_IF_VELOCITY);
+  state_interfaces_config.names.push_back(front_left_wheel_joint + "/" + HW_IF_VELOCITY);
+  // conf_names.push_back(front_right_wheel_joint + "/" + HW_IF_VELOCITY);
+  // conf_names.push_back(rear_left_wheel_joint + "/" + HW_IF_VELOCITY);
+  // conf_names.push_back(rear_right_wheel_joint + "/" + HW_IF_VELOCITY);
   // Steer states
-  conf_names.push_back("left_front_steer_joint" + "/" + HW_IF_POSITION);
-  conf_names.push_back("right_front_steer_joint" + "/" + HW_IF_POSITION);
-  return {interface_configuration_type::INDIVIDUAL, conf_names};
+  // conf_names.push_back(front_left_steer_joint + "/" + HW_IF_POSITION);
+  // conf_names.push_back(front_right_steer_joint + "/" + HW_IF_POSITION);
+  return state_interfaces_config;
 }
 
 
@@ -120,21 +127,21 @@ controller_interface::return_type AckermannSteeringController::update()
   auto steering_commands = rt_command_ptr_.readFromRT();
   // No command received yet
   if (!steering_commands || !(*steering_commands)) {
-    return controller_interface::return_type::SUCCESS;
+    return controller_interface::return_type::OK;
   }
 
   // Extract the steering commands. All other parameters are ignored.
-  double linear_command = last_msg->twist.linear.x;
-  double angular_command = last_msg->twist.angular.z;
+  // double linear_command = last_msg->twist.linear.x;
+  // double angular_command = last_msg->twist.angular.z;
 
   //
   // Set the wheel velocities
   //
 
   // TODO - How to set the individual interface values (?)
-  todo_left_front_wheel_interface.set_value(linear_command);
+  // front_left_wheel.command_velocity.set_value(0.0);
 
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
   }
 
 CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle::State &)
@@ -142,24 +149,24 @@ CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle:
   auto logger = node_->get_logger();
 
   // Configure motor wheels
-  left_front_wheel_joint = node_->get_parameter("left_front_wheel_joint").as_string();
-  right_front_wheel_joint =
+  front_left_wheel_joint = node_->get_parameter("left_front_wheel_joint").as_string();
+  front_right_wheel_joint =
     node_->get_parameter("right_front_wheel_joint").as_string();
-  left_rear_wheel_joint =
+  rear_left_wheel_joint =
     node_->get_parameter("left_rear_wheel_joint").as_string();
-  right_rear_wheel_joint =
+  rear_right_wheel_joint =
     node_->get_parameter("right_rear_wheel_joint").as_string();
 
   // Configure steering wheels
-  left_front_steer_joint =
+  front_left_steer_joint =
     node_->get_parameter("left_front_steer_joint").as_string();
-  right_front_steer_joint =
+  front_right_steer_joint =
     node_->get_parameter("right_front_steer_joint").as_string();
 
   // Create a subscription to /cmd_vel
   node_->create_subscription<geometry_msgs::msg::Twist>(
                                                         DEFAULT_COMMAND_TOPIC, rclcpp::SystemDefaultsQoS(),
-                                                        [this](const CmdType::SharedPtr msg) {
+                                                        [this](const Twist::SharedPtr msg) {
                                                           rt_command_ptr_.writeFromNonRT(msg);
                                                         });
 
@@ -169,18 +176,48 @@ CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle:
 
 CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::State &)
   {
+      auto logger = node_->get_logger();
 
-    subscriber_is_active_ = true;
+      subscriber_is_active_ = true;
 
-    // Motor wheel command interface handles
-    front_left_wheel = get_wheel_handle_from_name(left_front_wheel_joint);
-    front_right_wheel = get_wheel_handle_from_name(right_front_wheel_joint);
-    rear_left_wheel = get_wheel_handle_from_name(left_rear_wheel_joint);
-    rear_right_wheel = get_wheel_handle_from_name(right_rear_wheel_joint);
+      RCLCPP_INFO(logger, "Activating the Ackermann steering controller...");
+
+      // Motor wheel command interface handles
+      // TODO - Only testing with one wheel for now
+      // front_left_wheel = get_wheel_handle_from_name(front_left_wheel_joint, &front_left_wheel);
+
+      // Lookup the velocity state interface
+      for (const auto &state_interface : state_interfaces_)
+        {
+          RCLCPP_INFO(logger, "Found interface: %s", state_interface.get_interface_name());
+          if (state_interface.get_name() == front_left_wheel_joint &&
+              state_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY)
+            {
+              RCLCPP_DEBUG(logger, "Found interface: %s", state_interface.get_name());
+
+              // Command interface
+              for (const auto &command_interface : command_interfaces_)
+                {
+
+                  RCLCPP_INFO(logger, "Found interface: %s", command_interface.get_interface_name());
+                  if (command_interface.get_name() == front_left_wheel_joint &&
+                      command_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY)
+                    {
+                      RCLCPP_DEBUG(logger, "Found interface: %s", command_interface.get_name());
+                      front_left_wheel = std::make_shared<WheelHandle>(WheelHandle{
+                          std::ref(state_interface),
+                          std::ref(command_interface),
+                        });
+                    }
+                }
+            }
+        }
+
+
 
     // TODO - Steer wheel handles
 
-    RCLCPP_DEBUG(node_->get_logger(), "Subscriber is now active.");
+    RCLCPP_INFO(node_->get_logger(), "Subscriber is now active.");
     return CallbackReturn::SUCCESS;
   }
 
@@ -222,37 +259,46 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
     // TODO
   }
 
-std::shared_ptr<WheelHandle> get_wheel_handle_from_name(const std::string & wheel_joint_name) {
+// CallbackReturn AckermannSteeringController::get_wheel_handle_from_name(const std::string & wheel_joint_name, std::shared_ptr<WheelHandle> & handle) {
 
-    // Lookup the velocity state interface
-    const auto velocity_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&wheel_joint_name](const hardware_interface::LoanedStateInterface & interface)
-    {
-        return interface.get_name() == wheel_joint_name && interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY;
-    });
-    if (velocity_state == state_interfaces_.cend()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "%s velocity state interface not found", wheel_joint_name.c_str());
-        return nullptr;
-    }
+//     // Lookup the velocity state interface
+//     const auto velocity_state = std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(), [&wheel_joint_name](const hardware_interface::LoanedStateInterface & interface)
+//     {
+//         return interface.get_name() == wheel_joint_name && interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY;
+//     });
+//     if (velocity_state == state_interfaces_.cend()) {
+//         RCLCPP_ERROR(get_node()->get_logger(), "%s velocity state interface not found", wheel_joint_name.c_str());
+//         return nullptr;
+//     }
 
-    // Lookup the velocity command interface
-    const auto velocity_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&wheel_joint_name](const hardware_interface::LoanedCommandInterface & interface)
-    {
-        return interface.get_name() == wheel_joint_name && interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY;
-    });
-    if (velocity_command == command_interfaces_.end()) {
-        RCLCPP_ERROR(get_node()->get_logger(), "%s velocity command interface not found", wheel_joint_name.c_str());
-        return nullptr;
-    }
+//     // Lookup the velocity command interface
+//     const auto velocity_command = std::find_if(command_interfaces_.begin(), command_interfaces_.end(), [&wheel_joint_name](const hardware_interface::LoanedCommandInterface & interface)
+//     {
+//         return interface.get_name() == wheel_joint_name && interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY;
+//     });
+//     if (velocity_command == command_interfaces_.end()) {
+//         RCLCPP_ERROR(get_node()->get_logger(), "%s velocity command interface not found", wheel_joint_name.c_str());
+//         return nullptr;
+//     }
 
-    // Create the wheel instance
-    return std::make_shared<WheelHandle>(
-        std::ref(*velocity_state),
-        std::ref(*velocity_command)
-        );
+//     // Create the wheel instance
+//     // return std::make_shared<ackermann_steering_controller::AckermannSteeringController::WheelHandle>(
+//     //     std::ref(*velocity_state),
+//     //     std::ref(*velocity_command)
+//     //     );
+//     // return std::make_shared<ackermann_steering_controller::AckermannSteeringController::WheelHandle>WheelHandle{
+//     //   std::ref(*velocity_state),
+//     //   std::ref(*velocity_command),
+//     // };
+//     // std::ref<WheelHandle>WheelHandle{
+//     //   std::ref(*velocity_state),
+//     //     std::ref(*velocity_command),
+//     //     };
+//     // return nullptr;
+//     return CallbackReturn::SUCCESS;
+// }
 
-}
-
-}  // namespace diff_drive_controller
+}  // namespace ackermann_steering_controller
 
 #include "class_loader/register_macro.hpp"
 
