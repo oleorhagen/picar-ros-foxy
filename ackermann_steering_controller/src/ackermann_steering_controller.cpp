@@ -124,15 +124,23 @@ InterfaceConfiguration AckermannSteeringController::state_interface_configuratio
 
 controller_interface::return_type AckermannSteeringController::update()
 {
+
   auto logger = node_->get_logger();
-  auto steering_commands = rt_command_ptr_.readFromNonRT();
+  RCLCPP_INFO_STREAM(logger, "update()");
+  // std::shared_ptr<Twist> twist_stamped;
+  // auto steering_commands = rt_command_ptr_.get(twist_stamped);
+  // rt_command_ptr_.get(twist_stamped);
   // Set dummy speed of 1.0 to test
-  front_left_wheel->command_velocity.get().set_value(1.0);
+  // front_left_wheel->command_velocity.get().set_value(1.0);
+  // if (twist_stamped == nullptr) {
+  //   RCLCPP_INFO_STREAM(logger, "twist_stamped is a nullptr");
+  //   return controller_interface::return_type::OK;
+  // }
   // No command received yet
-  if (!steering_commands || !(*steering_commands)) {
-    RCLCPP_INFO_STREAM(logger, "\n--------------------------------------------------------------------------------No steering command received....\n--------------------------------------------------------------------------------\n");
-    return controller_interface::return_type::OK;
-  }
+  // if (!steering_commands || !(*steering_commands)) {
+  //   RCLCPP_INFO_STREAM(logger, "\n--------------------------------------------------------------------------------No steering command received....\n--------------------------------------------------------------------------------\n");
+  //   return controller_interface::return_type::OK;
+  // }
 
   // Extract the steering commands. All other parameters are ignored.
   // double linear_command = last_msg->twist.linear.x;
@@ -141,9 +149,13 @@ controller_interface::return_type AckermannSteeringController::update()
   //
   // Set the wheel velocities
   //
+  if (last_msg == nullptr) {
+    RCLCPP_INFO(logger, "last_msg in nullptr");
+    return controller_interface::return_type::OK;
+  }
 
-  RCLCPP_INFO(node_->get_logger(), "Setting velocity to: %f\n", (*steering_commands)->twist.linear.x);
-  front_left_wheel->command_velocity.get().set_value((*steering_commands)->twist.linear.x);
+  RCLCPP_INFO(node_->get_logger(), "Setting velocity to: %f\n", last_msg->twist.linear.x);
+  // front_left_wheel->command_velocity.get().set_value((*steering_commands)->twist.linear.x);
 
   // TODO - How to set the individual interface values (?)
   // front_left_wheel.command_velocity.set_value(0.0);
@@ -175,7 +187,10 @@ CallbackReturn AckermannSteeringController::on_configure(const rclcpp_lifecycle:
          "cmd_vel", rclcpp::SystemDefaultsQoS(),
          [this](const Twist::SharedPtr msg) -> void {
            RCLCPP_INFO(node_->get_logger(), "Received Twist message: %f", msg->twist.linear.x);
-           rt_command_ptr_.writeFromNonRT(msg);
+           // speed = msg->twist.linear.x;
+           // turn = msg->twist.angular.z;
+           // rt_command_ptr_.set(std::move(msg));
+           // std::move(msg);
            RCLCPP_INFO(node_->get_logger(), "Wrote message to the");
          });
 

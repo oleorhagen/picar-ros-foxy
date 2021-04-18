@@ -28,6 +28,10 @@ find_package(realtime_tools REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_msgs REQUIRED)
 
+# Debug
+find_package(backward_ros REQUIRED)
+add_compile_options(-g)
+
 
 add_library(ackermann_steering_controller SHARED
   src/ackermann_steering_controller.cpp

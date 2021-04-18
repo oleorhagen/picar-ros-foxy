@@ -3,7 +3,7 @@
 <package format="3">
   <name>pibot_pycontrol</name>
   <version>0.0.1</version>
-  <description>Simple Ackermann steering controller</description>
+  <description>Simple Ackermann steering controller written in Python</description>
   <maintainer email="olepo89@gmail.com">olepor</maintainer>
   <license>GPLv3</license>
 

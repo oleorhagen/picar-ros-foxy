@@ -36,7 +36,7 @@ def generate_launch_description():
     diffbot_steering_controller = os.path.join(
         get_package_share_directory("pibot_control"),
         "controller",
-        "diffbot_drive_controller.yml",
+        "diffbot_diff_drive_controller.yml",
     )
 
     return LaunchDescription(

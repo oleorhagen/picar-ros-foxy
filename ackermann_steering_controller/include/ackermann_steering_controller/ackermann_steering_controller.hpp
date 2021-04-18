@@ -102,7 +102,12 @@ protected:
       bool subscriber_is_active_                                          = false;
       rclcpp::Subscription<Twist>::SharedPtr velocity_command_subscriber_ = nullptr;
 
-      realtime_tools::RealtimeBuffer<std::shared_ptr<Twist>> rt_command_ptr_;
+      realtime_tools::RealtimeBox<std::shared_ptr<Twist>> rt_command_ptr_;
+
+  // Debug
+  std::shared_ptr<Twist> last_msg = nullptr;
+  double speed;
+  double turn;
 
       // Motor joint names
       std::string front_left_wheel_joint;

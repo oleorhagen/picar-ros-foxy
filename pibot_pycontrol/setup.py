@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "talker = pibot_pycontrol.pibot_controller:main",
+            "controller = pibot_pycontrol.pibot_controller:main",
         ],
     },
 )
