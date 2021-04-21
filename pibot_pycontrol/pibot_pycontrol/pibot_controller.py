@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 
-from pibot_pycontrol.motor_control import Motor as motor
+from pibot_pycontrol.motor_control import Motor
 
 
 class PiBotController(Node):
@@ -15,6 +15,7 @@ class PiBotController(Node):
         self.cmd_subscriber = self.create_subscription(
             Twist, "~/cmd_vel", self.cmd_vel_callback, 10
         )
+        self.motor = Motor()
         # self.cmd_out_publisher = self.create_publisher(Twist, "topic", 10)
         # timer_period = 0.5  # seconds
         # self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -42,7 +43,7 @@ class PiBotController(Node):
         self._set_vehicle_speed(self.speed)
 
     def _set_vehicle_speed(self, speed):
-        motor.command(speed, 0)
+        self.motor.command(speed, 0)
 
     def _set_steering_angle(self, theta):
         pass

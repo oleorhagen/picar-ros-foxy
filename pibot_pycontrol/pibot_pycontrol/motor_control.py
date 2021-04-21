@@ -42,14 +42,14 @@ class Motor:
         GPIO.setup(Motor_B_Pin1, GPIO.OUT)
         GPIO.setup(Motor_B_Pin2, GPIO.OUT)
 
-        self.Stop()
+        self.stop()
         try:
             pwm_A = GPIO.PWM(Motor_A_EN, 1000)
             pwm_B = GPIO.PWM(Motor_B_EN, 1000)
         except:
             pass
 
-    def Stop(self):  # Motor stops
+    def stop(self):  # Motor stops
         GPIO.output(Motor_A_Pin1, GPIO.LOW)
         GPIO.output(Motor_A_Pin2, GPIO.LOW)
         GPIO.output(Motor_B_Pin1, GPIO.LOW)
@@ -57,7 +57,7 @@ class Motor:
         GPIO.output(Motor_A_EN, GPIO.LOW)
         GPIO.output(Motor_B_EN, GPIO.LOW)
 
-    def left(status, direction, speed):  # Motor 2 positive and negative rotation
+    def left(self, status, direction, speed):  # Motor 2 positive and negative rotation
         if status == 0:  # stop
             GPIO.output(Motor_B_Pin1, GPIO.LOW)
             GPIO.output(Motor_B_Pin2, GPIO.LOW)
@@ -74,7 +74,7 @@ class Motor:
                 pwm_B.start(0)
                 pwm_B.ChangeDutyCycle(speed)
 
-    def right(status, direction, speed):  # Motor 1 positive and negative rotation
+    def right(self, status, direction, speed):  # Motor 1 positive and negative rotation
         if status == 0:  # stop
             GPIO.output(Motor_A_Pin1, GPIO.LOW)
             GPIO.output(Motor_A_Pin2, GPIO.LOW)
@@ -92,7 +92,7 @@ class Motor:
                 pwm_A.ChangeDutyCycle(speed)
         return direction
 
-    def command(speed, angle):
+    def command(self, speed, angle):
         """TODO: For now, simply ignore the steering angle, and have the wheels go the same speed"""
         if speed >= 0:
             self.left(1, left_forward, speed)
@@ -103,5 +103,5 @@ class Motor:
             self.right(0, right_backward, speed)
 
     def destroy():
-        motorStop()
+        self.stop()
         GPIO.cleanup()  # Release resource
