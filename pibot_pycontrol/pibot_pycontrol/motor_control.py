@@ -3,6 +3,9 @@ import RPi.GPIO as GPIO
 # motor_EN_B: Pin11
 #    |  motor_B: Pin13,Pin12
 
+# motor_EN_A: Pin7  |
+# motor_A:  Pin8,Pin10
+
 # EN(able) motor B - Setting pin 17 high enables driver channel _
 Motor_B_EN = 17
 # Motor driver inputs
@@ -12,12 +15,11 @@ Motor_B_Pin2 = 18
 
 # States
 stop = 1
-forward =  2
+forward = 2
 backward = 3
 
+
 class Motor:
-    # motor_EN_A: Pin7  |
-    # motor_A:  Pin8,Pin10
 
     state = stop
 
@@ -32,6 +34,8 @@ class Motor:
 
     def forward(self, speed):
         if self.state == forward:
+            GPIO.output(self.pin1, GPIO.LOW)
+            GPIO.output(self.pin2, GPIO.HIGH)
             self.pwm.ChangeDutyCycle(speed)
             return
         GPIO.output(self.pin1, GPIO.LOW)
@@ -61,6 +65,8 @@ class MotorController:
     """A simple wrapper class for controlling the PWM motor on the PiCar Pro"""
 
     def __init__(self):  # Motor initialization
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
         self.left = Motor(enable_pin=4, pin1=26, pin2=21)
         self.right = Motor(enable_pin=17, pin1=27, pin2=18)
 
@@ -79,3 +85,12 @@ class MotorController:
     def stop(self):
         self.left.stop()
         self.right.stop()
+
+
+if __name__ == "__main__":
+    mc = MotorController()
+    mc.forward(100)
+    import time
+    time.sleep(10)
+    # mc.stop()
+    pass
