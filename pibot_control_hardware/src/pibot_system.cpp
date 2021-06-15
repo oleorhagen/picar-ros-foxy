@@ -43,7 +43,7 @@ hardware_interface::return_type PiBotSystemHardware::configure(
     if (joint.command_interfaces.size() != 1) {
       RCLCPP_FATAL(
         rclcpp::get_logger("PiBotSystemHardware"),
-        "Joint '%s' has %d command interfaces found. 1 expected.",
+        "Joint '%s' has %zu command interfaces found. 1 expected.",
         joint.name.c_str(), joint.command_interfaces.size());
       return hardware_interface::return_type::ERROR;
     }
@@ -60,7 +60,7 @@ hardware_interface::return_type PiBotSystemHardware::configure(
     if (joint.state_interfaces.size() != 2) {
       RCLCPP_FATAL(
         rclcpp::get_logger("PiBotSystemHardware"),
-        "Joint '%s' has %d state interface. 2 expected.",
+        "Joint '%s' has %zu state interface. 2 expected.",
         joint.name.c_str(), joint.state_interfaces.size());
       return hardware_interface::return_type::ERROR;
     }
@@ -68,7 +68,7 @@ hardware_interface::return_type PiBotSystemHardware::configure(
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(
         rclcpp::get_logger("PiBotSystemHardware"),
-        "Joint '%s' have '%s' as first state interface. '%s' and '%s' expected.",
+        "Joint '%s' have '%s' as first state interface. '%s' expected.",
         joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
         hardware_interface::HW_IF_POSITION);
       return hardware_interface::return_type::ERROR;
