@@ -213,21 +213,21 @@ CallbackReturn AckermannSteeringController::on_activate(const rclcpp_lifecycle::
       // Lookup the velocity state interface
       for (const auto &state_interface : state_interfaces_)
         {
-          RCLCPP_INFO(logger, "Found interface: %s", state_interface.get_interface_name());
+          RCLCPP_INFO(logger, "Found interface: %s", state_interface.get_interface_name().c_str());
           if (state_interface.get_name() == front_left_wheel_joint &&
               state_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY)
             {
-              RCLCPP_DEBUG(logger, "Found interface: %s", state_interface.get_name());
+              RCLCPP_DEBUG(logger, "Found interface: %s", state_interface.get_name().c_str());
 
               // Command interface
               for (auto &command_interface : command_interfaces_)
                 {
 
-                  RCLCPP_INFO(logger, "Found interface: %s", command_interface.get_interface_name());
+                  RCLCPP_INFO(logger, "Found interface: %s", command_interface.get_interface_name().c_str());
                   if (command_interface.get_name() == front_left_wheel_joint &&
                       command_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY)
                     {
-                      RCLCPP_DEBUG(logger, "Found interface: %s", command_interface.get_name());
+                      RCLCPP_DEBUG(logger, "Found interface: %s", command_interface.get_name().c_str());
                       front_left_wheel = std::make_shared<WheelHandle>(WheelHandle{
                           std::ref(state_interface),
                           std::ref(command_interface),
