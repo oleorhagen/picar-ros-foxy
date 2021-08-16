@@ -41,19 +41,29 @@ class PiBotController(Node):
     def cmd_vel_callback(self, msg):
         self.get_logger().info(f"Got cmd_vel msg: {msg}")
         # Simply extract the angular.z = theta
-        self.theta = msg.angular.z
+        # self.theta = msg.angular.z <- this or y below (?)
+        self.theta = msg.linear.y
         # Simply extract the linear.x = speed
         self.speed = msg.linear.x
         self.get_logger().info(
             f"Received Twist msg: speed {self.speed}, theta: {self.theta}"
         )
         self._set_vehicle_speed(self.speed)
+        self._set_steering_angle(self.theta)
 
     def _set_vehicle_speed(self, speed):
-        self.motor.command(speed, 0)
+        if speed > 100 or speed < 0:
+            # TODO - log in ros, speed too high (!)
+            return
+        self.motor.forward(speed) # TODO - should be command (?)
 
     def _set_steering_angle(self, theta):
-        self.steer.set(theta)
+        try:
+            self.steer.set(theta)
+        except Exception as e:
+            # TODO - log this in ROS
+            print(e)
+
 
     # Calculate the speed for the back wheels
     def _calculate_speeds(self, speed, theta):

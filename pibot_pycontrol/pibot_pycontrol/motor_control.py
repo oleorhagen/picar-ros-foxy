@@ -63,7 +63,10 @@ class Motor:
 
 
 class MotorController:
-    """A simple wrapper class for controlling the PWM motor on the PiCar Pro"""
+    """A simple wrapper class for controlling the PWM motor on the PiCar Pro
+
+    goes from [-100, 100]
+    """
 
     def __init__(self):  # Motor initialization
         GPIO.setwarnings(False)
@@ -131,9 +134,9 @@ class Steer:
         return int(100 + ((560 - 100)/(180 - 0)) * (x - 0))
 
     def set(self, angle):
-        if not 20 <= angle <= 160:
-            raise Exception("Angle not allowed")
-        self.pwm.set_pwm(0, 0, self.f(angle))
+        if not 20 <= angle + 90 <= 160:
+            raise Exception(f"Angle not allowed: {angle}")
+        self.pwm.set_pwm(0, 0, self.f(angle+90))
 
 
 
