@@ -27,6 +27,7 @@ class Motor:
         self.enable_pin = enable_pin
         self.pin1 = pin1
         self.pin2 = pin2
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.enable_pin, GPIO.OUT)
         GPIO.setup(self.pin1, GPIO.OUT)
         GPIO.setup(self.pin2, GPIO.OUT)
@@ -86,11 +87,64 @@ class MotorController:
         self.left.stop()
         self.right.stop()
 
+class Steer:
+
+    def __init__(self):
+        # Import the library used to communicate with PCA9685
+        import Adafruit_PCA9685
+
+        import time
+
+        # Instantiate the object used to control the PWM
+        # Has a cycle of approximately:
+        # 0 deg - 100 Hz
+        # 180 deg - 560 Hz
+
+        # TODO
+        # Map this using:
+        # f: [a,b] -> [c,d]
+        # f(x) = c + d-c/b-a * (x-a)
+
+        def f(x):
+            return int(100 + ((560 - 100)/(180 - 0)) * (x - 0))
+        pwm = Adafruit_PCA9685.PCA9685()
+
+        self.pwm = pwm
+
+        # Set the frequency of the PWM signal
+        pwm.set_pwm_freq(50)
+
+
+        # Make the servo connected to the No. 3 servo port on the RobotHAT
+        # drive board reciprocate
+        # while True:
+        #     pwm.set_pwm(0, 0, 300)
+        #     time.sleep(1)
+
+        #     pwm.set_pwm(0, 0, 400)
+
+        #     time.sleep(1)
+
+        #     pwm.set_pwm(0, 0, f(60))
+
+    def f(self, x):
+        return int(100 + ((560 - 100)/(180 - 0)) * (x - 0))
+
+    def set(self, angle):
+        if not 20 <= angle <= 160:
+            raise Exception("Angle not allowed")
+        self.pwm.set_pwm(0, 0, self.f(angle))
+
+
+
 
 if __name__ == "__main__":
-    mc = MotorController()
-    mc.forward(100)
+    # mc = MotorController()
+    # mc.forward(100)
     import time
-    time.sleep(10)
+    # time.sleep(10)
     # mc.stop()
+    steer = Steer()
+    time.sleep(2)
+    steer.set(120)
     pass

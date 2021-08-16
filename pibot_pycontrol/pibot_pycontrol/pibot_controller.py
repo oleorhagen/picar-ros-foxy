@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 
-from pibot_pycontrol.motor_control import Motor
+from pibot_pycontrol.motor_control import Motor, Steer
 
 
 class PiBotController(Node):
@@ -15,11 +15,16 @@ class PiBotController(Node):
         self.cmd_subscriber = self.create_subscription(
             Twist, "~/cmd_vel", self.cmd_vel_callback, 10
         )
-        self.motor = Motor()
+        self.motor = Motor(enable_pin=17, pin1=27, pin2=18) # Motor B
+        self.steer = Steer()
         # self.cmd_out_publisher = self.create_publisher(Twist, "topic", 10)
         # timer_period = 0.5  # seconds
         # self.timer = self.create_timer(timer_period, self.timer_callback)
         # self.i = 0
+
+        # FIXME - make these parametrizable in ROS param
+        self.length = 1
+        self.width = 1
 
     def timer_callback(self):
         twist = Twist()
@@ -39,13 +44,19 @@ class PiBotController(Node):
         self.theta = msg.angular.z
         # Simply extract the linear.x = speed
         self.speed = msg.linear.x
-        self.get_logger().info(f"Received Twist msg: speed {self.speed}, theta: {self.theta}")
+        self.get_logger().info(
+            f"Received Twist msg: speed {self.speed}, theta: {self.theta}"
+        )
         self._set_vehicle_speed(self.speed)
 
     def _set_vehicle_speed(self, speed):
         self.motor.command(speed, 0)
 
     def _set_steering_angle(self, theta):
+        self.steer.set(theta)
+
+    # Calculate the speed for the back wheels
+    def _calculate_speeds(self, speed, theta):
         pass
 
     def calculate_odometry(self):
@@ -59,6 +70,7 @@ def main(args=None):
     rclpy.spin(pibot_controller)
     pibot_controller.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
