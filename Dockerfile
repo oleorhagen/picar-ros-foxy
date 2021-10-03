@@ -4,8 +4,8 @@ RUN mkdir -p /home/rosusr/dev_ws/src
 
 # Fresh apt
 RUN apt update
-#RUN apt install vim
-#RUN apt install python3-pip
+RUN DEBIAN_FRONTEND=noninteractive apt install -yyyq vim python3-pip
+# RUN apt install python3-pip
 #RUN sudo apt upgrade
 
 # Packages currently required
@@ -21,10 +21,12 @@ RUN echo 'olepor ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID olepor
 USER olepor
 
-RUN sudo mkdir /home/olepor/dev_ws/log
-RUN sudo mkdir /home/olepor/dev_ws/install
-RUN sudo mkdir /home/olepor/dev_ws/build
-RUN sudo chown olepor:olepor /home/olepor/dev_ws/{build,log,install}
+RUN sudo mkdir -p /home/olepor/dev_ws/log
+RUN sudo mkdir -p /home/olepor/dev_ws/install
+RUN sudo mkdir -p /home/olepor/dev_ws/build
+RUN sudo chown olepor:olepor /home/olepor/dev_ws/log
+RUN sudo chown olepor:olepor /home/olepor/dev_ws/install
+RUN sudo chown olepor:olepor /home/olepor/dev_ws/build
 
 # TODO - or something similar
 #ADD https://github.com/oleorhagen/steer_bot.git /home/rosuser/catkin_ws/steer_bot
