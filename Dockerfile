@@ -4,7 +4,7 @@ RUN mkdir -p /home/rosusr/dev_ws/src
 
 # Fresh apt
 RUN apt update
-RUN DEBIAN_FRONTEND=noninteractive apt install -yyyq vim python3-pip
+RUN DEBIAN_FRONTEND=noninteractive apt install -yyyq vim python3-pip ros-foxy-xacro ros-foxy-joint-state-publisher-gui
 # RUN apt install python3-pip
 #RUN sudo apt upgrade
 
