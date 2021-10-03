@@ -1,0 +1,6 @@
+ackermann_drive_teleop:
+  ros__parameters:
+    forward_rate : 60
+    backward_rate: -60
+    left_steer: 60
+    right_steer: 60

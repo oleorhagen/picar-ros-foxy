@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 
-from pibot_pycontrol.motor_control import Motor, Steer
+from pibot_pycontrol.motor_control import MotorController, Steer
 
 
 class PiBotController(Node):
@@ -15,7 +15,7 @@ class PiBotController(Node):
         self.cmd_subscriber = self.create_subscription(
             Twist, "~/cmd_vel", self.cmd_vel_callback, 10
         )
-        self.motor = Motor(enable_pin=17, pin1=27, pin2=18) # Motor B
+        self.motor = MotorController()
         self.steer = Steer()
         # self.cmd_out_publisher = self.create_publisher(Twist, "topic", 10)
         # timer_period = 0.5  # seconds
@@ -52,8 +52,12 @@ class PiBotController(Node):
         self._set_steering_angle(self.theta)
 
     def _set_vehicle_speed(self, speed):
-        if speed > 100 or speed < 0:
+        if speed > 100 or speed < -100:
             # TODO - log in ros, speed too high (!)
+            print("Speed to high or low")
+            return
+        if speed < 0:
+            self.motor.backward(-speed)
             return
         self.motor.forward(speed) # TODO - should be command (?)
 

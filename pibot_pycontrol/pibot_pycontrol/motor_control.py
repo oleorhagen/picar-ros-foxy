@@ -35,8 +35,8 @@ class Motor:
 
     def forward(self, speed):
         if self.state == forward:
-            GPIO.output(self.pin1, GPIO.LOW)
-            GPIO.output(self.pin2, GPIO.HIGH)
+            GPIO.output(self.pin1, GPIO.HIGH)
+            GPIO.output(self.pin2, GPIO.LOW)
             self.pwm.ChangeDutyCycle(speed)
             return
         GPIO.output(self.pin1, GPIO.LOW)
@@ -49,8 +49,8 @@ class Motor:
         if self.state == backward:
             self.pwm.ChangeDutyCycle(speed)
             return
-        GPIO.output(self.pin1, GPIO.HIGH)
-        GPIO.output(self.pin2, GPIO.LOW)
+        GPIO.output(self.pin1, GPIO.LOW)
+        GPIO.output(self.pin2, GPIO.HIGH)
         self.pwm.start(0)
         self.pwm.ChangeDutyCycle(speed)
         self.state = backward
@@ -75,14 +75,14 @@ class MotorController:
         self.right = Motor(enable_pin=17, pin1=27, pin2=18)
 
     def forward(self, speed):
-        if speed <= 0:
-            raise Exception("Trying to set a negative speed on a forward command")
+        if speed < 0:
+            raise Exception(f"Trying to set a negative speed on a forward command {speed}")
         self.left.forward(speed)
         self.right.forward(speed)
 
     def backward(self, speed):
-        if speed >= 0:
-            raise Exception("Trying to set a positive speed on a backward command")
+        if speed < 0:
+            raise Exception(f"Trying to set a negative speed on the backward command interface: {speed}")
         self.left.backward(speed)
         self.right.backward(speed)
 
