@@ -25,6 +25,10 @@ def generate_launch_description():
                 default_value=default_model_path,
                 description="The urdf model file name (xacro supported)",
             ),
+            #
+            # The robot state publisher publishes static TF2 transformations,
+            # extracted from the URDF description of the robot
+            #
             Node(
                 package="robot_state_publisher",
                 executable="robot_state_publisher",
